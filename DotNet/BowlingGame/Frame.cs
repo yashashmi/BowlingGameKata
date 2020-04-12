@@ -1,12 +1,25 @@
-﻿namespace BowlingGame
+﻿using System.Collections;
+
+namespace BowlingGame
 {
     public class Frame
     {
-        public int FrameNumber { get; set; }
-        public int Roll1 { get; set; }
-        public int Roll2 { get; set; }
-        public int Roll3 { get; set; }
-        public bool IsStrike { get; internal set; }
-        public int FrameScore { get; set; }
+        public Frame()
+        {
+            Roll = new ArrayList();
+        }
+        public ArrayList Roll { get; internal set; }
+        public int Bonus { get; internal set; }
+
+        // public int GetScore()
+        // {
+        //     var score = 0;
+        //     foreach (var roll in Roll)
+        //     {
+        //         score += (int)roll;
+        //     }
+        //     return score;
+        // }
+
     }
 }

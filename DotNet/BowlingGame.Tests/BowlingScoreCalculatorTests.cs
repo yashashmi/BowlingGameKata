@@ -1,145 +1,167 @@
-using System;
 using NUnit.Framework;
-using BowlingGame;
 
 namespace BowlingGame.Tests
 {
     public class BowlingScoreCalculatorTests
     {
-        BowlingGame.BowlingScoreCalculator scoreCalculator_;
-        [SetUp]
-        public void Setup()
-        {
-            scoreCalculator_ = new BowlingGame.BowlingScoreCalculator();
-        }
-
 
         [Test]
-        public void ShouldReturnTheScoreOfAFrame()
+        public void ShouldStoreFirstRollInFrame()
         {
-            var frame = new Frame { FrameNumber = 1, Roll1 = 1, Roll2 = 4 };
-            
-            var result = scoreCalculator_.SubmitScore(frame);
+            var scoreCalculator = new BowlingScoreCalculator();
+            scoreCalculator.SubmitScore(2);
+            scoreCalculator.SubmitScore(4);
 
-            Assert.That(result, Is.EqualTo(5));
+            Assert.That(scoreCalculator.Frames[0].Roll[0], Is.EqualTo(2));
         }
 
         [Test]
-        public void ShouldReturnTheCumulativeScore()
+        public void ShouldStoreSecondRollInFrame()
         {
-            var frame = new Frame { FrameNumber = 1, Roll1 = 1, Roll2 = 4 };
-            var frame2 = new Frame { FrameNumber = 2, Roll1 = 4, Roll2 = 5 };
-            var frame3 = new Frame { FrameNumber = 3, Roll1 = 3, Roll2 = 5 };
-            scoreCalculator_.SubmitScore(frame);
-            scoreCalculator_.SubmitScore(frame2);
-            scoreCalculator_.SubmitScore(frame3);
+            var scoreCalculator = new BowlingScoreCalculator();
+            scoreCalculator.SubmitScore(2);
+            scoreCalculator.SubmitScore(4);
 
-            Assert.That(scoreCalculator_.TotalScore, Is.EqualTo(22));
+            Assert.That(scoreCalculator.Frames[0].Roll[1], Is.EqualTo(4));
         }
 
         [Test]
-        public void ShouldBeAbleToReterieveFrameSpecificTotal()
+        public void ShouldCreateNewFrameAfterTwoRolls()
         {
-            var frame = new Frame { FrameNumber = 1, Roll1 = 1, Roll2 = 4 };
-            var frame2 = new Frame { FrameNumber = 2, Roll1 = 4, Roll2 = 5 };
-            var frame3 = new Frame { FrameNumber = 3, Roll1 = 3, Roll2 = 5 };
-            scoreCalculator_.SubmitScore(frame);
-            scoreCalculator_.SubmitScore(frame2);
-            scoreCalculator_.SubmitScore(frame3);
+            var scoreCalculator = new BowlingScoreCalculator();
+            scoreCalculator.SubmitScore(2);
+            scoreCalculator.SubmitScore(4);
+            var frame1 = scoreCalculator.Frames[0];
+            scoreCalculator.SubmitScore(3);
+            scoreCalculator.SubmitScore(2);
 
-            Assert.That(scoreCalculator_.Frames.Find(f => f.FrameNumber == 2).FrameScore, Is.EqualTo(9));
+            Assert.That(scoreCalculator.Frames[1], Is.Not.SameAs(frame1));
         }
 
         [Test]
-        public void ShouldNotThrowExceptionForBonusCalculationForTheFirstFrame()
+        public void ShouldchangeTheFrameIfItIsAStrike()
         {
-            var frame = new Frame { FrameNumber = 1, Roll1 = 3, Roll2 = 5 };
-            Assert.DoesNotThrow(() => scoreCalculator_.SubmitScore(frame));
+            var scoreCalculator = new BowlingScoreCalculator();
+            scoreCalculator.SubmitScore(2);
+            scoreCalculator.SubmitScore(4);
+            var frame1 = scoreCalculator.Frames[0];
+            scoreCalculator.SubmitScore(10);
+            var frame2 = scoreCalculator.Frames[1];
 
+            scoreCalculator.SubmitScore(3);
+            var frame3 = scoreCalculator.Frames[2];
+            scoreCalculator.SubmitScore(2);
+
+            Assert.That(frame2, Is.Not.SameAs(frame3));
         }
 
         [Test]
-        public void ShouldAddBonusToPreviousFrameWhenItIsSpareInPreviousFrame()
+        public void ShouldNotCreateANewFrameIfItIsStrikeInTenthFrame()
         {
-            var frame = new Frame { FrameNumber = 1, Roll1 = 1, Roll2 = 4 };
-            var frame2 = new Frame { FrameNumber = 2, Roll1 = 5, Roll2 = 5 };
-            var frame3 = new Frame { FrameNumber = 3, Roll1 = 3, Roll2 = 5 };
-            scoreCalculator_.SubmitScore(frame);
-            scoreCalculator_.SubmitScore(frame2);
-            scoreCalculator_.SubmitScore(frame3);
-
-            Assert.That(scoreCalculator_.Frames.Find(f => f.FrameNumber == 2).FrameScore, Is.EqualTo(13));
-        }
-
-        [Test]
-        public void ShouldConsiderThirdRollIfThereIsASpareInLastFrame()
-        {
-            for (int i = 1; i < 10; i++)
+            var scoreCalculator = new BowlingScoreCalculator();
+            for (int i = 0; i < 9; i++)
             {
-                var frame = new Frame { FrameNumber = i, Roll1 = 3, Roll2 = 5 };
-
-                scoreCalculator_.SubmitScore(frame);
+                scoreCalculator.SubmitScore(2);
+                scoreCalculator.SubmitScore(4);
             }
 
-            var frame10 = new Frame { FrameNumber = 10, Roll1 = 4, Roll2 = 6, Roll3 = 4 };
-            scoreCalculator_.SubmitScore(frame10);
-            Assert.That(scoreCalculator_.Frames.Find(f => f.FrameNumber == 10).FrameScore, Is.EqualTo(14));
+            scoreCalculator.SubmitScore(10);
+            scoreCalculator.SubmitScore(4);
 
+            Assert.That(scoreCalculator.Frames[9].Roll[1], Is.EqualTo(4));
         }
 
         [Test]
-        public void ShouldDisregardRoll2IfItIsAStrike()
+        public void ShouldAddThirdRollIfItIsStrikeInTenthFrame()
         {
-           var frame10 = new Frame { FrameNumber = 1, Roll1 = 10, Roll2 = 6 };
-            scoreCalculator_.SubmitScore(frame10);
-            Assert.That(scoreCalculator_.Frames.Find(f => f.FrameNumber == 1).FrameScore, Is.EqualTo(10));
+            var scoreCalculator = new BowlingScoreCalculator();
+            for (int i = 0; i < 9; i++)
+            {
+                scoreCalculator.SubmitScore(2);
+                scoreCalculator.SubmitScore(4);
+            }
 
+            scoreCalculator.SubmitScore(10);
+            scoreCalculator.SubmitScore(4);
+            scoreCalculator.SubmitScore(5);
+
+            Assert.That(scoreCalculator.Frames[9].Roll[2], Is.EqualTo(5));
         }
 
         [Test]
-        public void ShouldUpdateTheFrameIfItIsStrike()
+        public void ShouldAddThirdRollIfItIsSpareInTenthFrame()
         {
-            var frame = new Frame { FrameNumber = 1, Roll1 = 1, Roll2 = 4 };
-            var frame2 = new Frame { FrameNumber = 2, Roll1 = 10, Roll2 = 0 };
-            var frame3 = new Frame { FrameNumber = 3, Roll1 = 3, Roll2 = 5 };
-            scoreCalculator_.SubmitScore(frame);
-            scoreCalculator_.SubmitScore(frame2);
-            scoreCalculator_.SubmitScore(frame3);
+            var scoreCalculator = new BowlingScoreCalculator();
+            for (int i = 0; i < 9; i++)
+            {
+                scoreCalculator.SubmitScore(2);
+                scoreCalculator.SubmitScore(4);
+            }
 
-            Assert.That(frame2.IsStrike, Is.True);
-        }
-        [Test]
-        public void ShouldAddBonusToForNextTwoConsecutiveRolesIfItIsAStrike()
-        {
-            var frame = new Frame { FrameNumber = 1, Roll1 = 1, Roll2 = 4 };
-            var frame2 = new Frame { FrameNumber = 2, Roll1 = 10, Roll2 = 0 };
-            var frame3 = new Frame { FrameNumber = 3, Roll1 = 3, Roll2 = 5 };
-            scoreCalculator_.SubmitScore(frame);
-            scoreCalculator_.SubmitScore(frame2);
-            scoreCalculator_.SubmitScore(frame3);
+            scoreCalculator.SubmitScore(5);
+            scoreCalculator.SubmitScore(5);
+            scoreCalculator.SubmitScore(10);
 
-            Assert.That(scoreCalculator_.Frames.Find(f => f.FrameNumber == 2).FrameScore, Is.EqualTo(18));
-
+            Assert.That(scoreCalculator.Frames[9].Roll[2], Is.EqualTo(10));
         }
 
         [Test]
-        public void ShouldAddBonusWhenThereAreTwoOrMoreConsecutiveStrikes()
+        public void ShouldAddBonusWhenItIsSpare()
         {
-            var frame = new Frame { FrameNumber = 1, Roll1 = 1, Roll2 = 4 };
-            var frame2 = new Frame { FrameNumber = 2, Roll1 = 10, Roll2 = 0 };
-            var frame3 = new Frame { FrameNumber = 3, Roll1 = 10, Roll2 = 0 };
-            var frame4 = new Frame { FrameNumber = 4, Roll1 = 5, Roll2 = 5 };
+            var scoreCalculator = new BowlingScoreCalculator();
+            scoreCalculator.SubmitScore(5);
+            scoreCalculator.SubmitScore(5);
 
-            scoreCalculator_.SubmitScore(frame);
-            scoreCalculator_.SubmitScore(frame2);
-            scoreCalculator_.SubmitScore(frame3);
-            scoreCalculator_.SubmitScore(frame4);
+            scoreCalculator.SubmitScore(3);
+            scoreCalculator.SubmitScore(5);
 
-            Assert.That(scoreCalculator_.Frames.Find(f => f.FrameNumber == 2).FrameScore, Is.EqualTo(25));
-            Assert.That(scoreCalculator_.Frames.Find(f => f.FrameNumber == 3).FrameScore, Is.EqualTo(20));
+            Assert.That(scoreCalculator.Frames[0].Bonus, Is.EqualTo(3));
+        }
 
+        [Test]
+        public void ShouldAddFirstRollToBonusWhenItIsStrike()
+        {
+            var scoreCalculator = new BowlingScoreCalculator();
+            scoreCalculator.SubmitScore(5);
+            scoreCalculator.SubmitScore(5);
+
+            scoreCalculator.SubmitScore(10);
+
+            scoreCalculator.SubmitScore(3);
+            //scoreCalculator.SubmitScore(5);
+
+            Assert.That(scoreCalculator.Frames[1].Bonus, Is.EqualTo(3));
         }
 
 
+        [Test]
+        public void ShouldAddSecondRollToBonusWhenItIsStrike()
+        {
+            var scoreCalculator = new BowlingScoreCalculator();
+            scoreCalculator.SubmitScore(5);
+            scoreCalculator.SubmitScore(5);
+
+            scoreCalculator.SubmitScore(10);
+
+            scoreCalculator.SubmitScore(3);
+            scoreCalculator.SubmitScore(5);
+
+            Assert.That(scoreCalculator.Frames[1].Bonus, Is.EqualTo(8));
+        }
+        [Test]
+        public void ShouldAddFirstRollOfNextFrameAsWellToBonusWhenTwoConsecutiveStrikes()
+        {
+            var scoreCalculator = new BowlingScoreCalculator();
+            scoreCalculator.SubmitScore(5);
+            scoreCalculator.SubmitScore(5);
+
+            scoreCalculator.SubmitScore(10);
+
+            scoreCalculator.SubmitScore(10);
+
+            scoreCalculator.SubmitScore(5);
+
+            Assert.That(scoreCalculator.Frames[1].Bonus, Is.EqualTo(15));
+        }
     }
 }

@@ -6,64 +6,83 @@ namespace BowlingGame
     {
         public BowlingScoreCalculator()
         {
+            Frame = new Frame();
             Frames = new List<Frame>();
+            Frames.Add(Frame);
         }
 
-        public int TotalScore { get; internal set; }
-        public List<Frame> Frames { get; internal set; }
+        private Frame Frame { get; set; }
+        public List<Frame> Frames { get; set; }
 
-        public int SubmitScore(Frame frame)
+        public void SubmitScore(int pinCount)
         {
-            int frameNumber = frame.FrameNumber;
-            int roll1 = frame.Roll1;
-            int roll2 = frame.Roll2;
-            int frameScore = 0;
+            Frame.Roll.Add(pinCount);
+            AddSpareBonus();
+            AddStrikeBonus();
 
-            MarkStrike(roll1, frame);
-            CalculateBonusForStrikeAndSpare(frame, frameNumber, roll1, roll2);
-
-            frameScore += roll1;
-            if (roll1 != 10 || frameNumber == 10)
+            if ((IsStrike(Frame) || Frame.Roll.Count > 1) && !(Frames.Count == 10 && (IsStrike(Frame) || IsSpare(Frame))))
             {
-                frameScore += roll2;
+                AddNewFrame();
             }
-
-            if (frameNumber == 10)
-            {
-                frameScore += frame.Roll3;
-            }
-            frame.FrameScore = frameScore;
-            TotalScore += frameScore;
-            Frames.Add(frame);
-            return frameScore;
 
         }
 
-        private void CalculateBonusForStrikeAndSpare(Frame frame, int frameNumber, int roll1, int roll2)
+        private bool IsStrike(Frame frame)
         {
-            if (Frames.Exists((f) => f.FrameNumber == frame.FrameNumber - 1) && Frames.Find(f => f.FrameNumber == frameNumber - 1).FrameScore == 10)
+            if (frame.Roll.Count > 0)
             {
-                Frames.Find(f => f.FrameNumber == frameNumber - 1).FrameScore += roll1;
-                if (Frames.Find(f => f.FrameNumber == frameNumber - 1).IsStrike)
+                return (int)frame.Roll[0] == 10;
+            }
+            return false;
+        }
+
+        private bool IsSpare(Frame frame)
+        {
+            if (frame.Roll.Count > 1)
+            {
+                return ((int)frame.Roll[0] + (int)frame.Roll[1]) == 10;
+            }
+            return false;
+        }
+
+        private void AddSpareBonus()
+        {
+            if (Frames.Count > 1)
+            {
+                if (IsSpare(Frames[Frames.Count - 2]))
                 {
-                    if (Frames.Exists((f) => f.FrameNumber == frame.FrameNumber - 2) && Frames.Find(f => f.FrameNumber == frameNumber - 2).IsStrike)
-                    {
-                        Frames.Find(f => f.FrameNumber == frameNumber - 2).FrameScore += roll1;
-                    }
-
-                    Frames.Find(f => f.FrameNumber == frameNumber - 1).FrameScore += roll2;
-
+                    Frames[Frames.Count - 2].Bonus = (int)Frames[Frames.Count - 1].Roll[0];
                 }
             }
         }
 
-        private void MarkStrike(int roll, Frame frame)
+        private void AddStrikeBonus()
         {
-
-            if (roll == 10)
+            if (Frames.Count > 1)
             {
-                frame.IsStrike = true;
+                if (IsStrike(Frames[Frames.Count - 2]))
+                {
+                    Frames[Frames.Count - 2].Bonus = (int)Frames[Frames.Count - 1].Roll[0];
+                    if (Frame.Roll.Count > 1)
+                    {
+                        Frames[Frames.Count - 2].Bonus += (int)Frames[Frames.Count - 1].Roll[1];
+                    }
+                }
             }
+            if (Frames.Count > 2)
+            {
+                if (IsStrike(Frames[Frames.Count - 3]) && IsStrike(Frames[Frames.Count - 2]))
+                {
+                    Frames[Frames.Count - 3].Bonus = (int)Frames[Frames.Count - 1].Roll[0];
+                    Frames[Frames.Count - 3].Bonus += (int)Frames[Frames.Count - 2].Roll[0];
+                }
+            }
+        }
+
+        private void AddNewFrame()
+        {
+            Frame = new Frame();
+            Frames.Add(Frame);
         }
     }
 }
