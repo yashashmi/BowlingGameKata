@@ -18,10 +18,10 @@
             {
                 foreach (var roll in scoreCalculator_.Frames[i].Roll)
                 {
-                    rollCount += roll.ToString() + "\t";
+                    rollCount += roll.ToString() + " ";
                 }
 
-                frameScore += scoreCalculator_.Frames[i].GetScore().ToString() + "\t\t";
+                frameScore += scoreCalculator_.Frames[i].GetScore().ToString() + "  ";
             }
 
            
